@@ -9,37 +9,18 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
 abstract class BaseBindingRecyclerAdapter<DataType>(
-    private val controller: Fragment,
-    private val layoutResId: Int,
-    areItemsTheSameFun: ((oldItem: DataType, newItem: DataType) -> Boolean)? = null
+    private val controller: Fragment
 ) : RecyclerView.Adapter<BindingViewHolder<DataType>>() {
 
-    private val itemsList = mutableListOf<DataType>()
-    private val diffCallback: MyDiffCallback<DataType>?
+    protected val itemsList = mutableListOf<DataType>()
 
-    init {
-        if (areItemsTheSameFun != null) {
-            diffCallback = MyDiffCallback(areItemsTheSameFun)
-        } else {
-            diffCallback = null
-        }
-    }
-
-    fun updateItemsList(newList: List<DataType>) {
-        if (diffCallback == null) {
-            hardUpdateList(newList)
-        } else {
-            diffUpdateList(newList)
-        }
+    open fun updateItemsList(newList: List<DataType>) {
+        hardUpdateList(newList)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindingViewHolder<DataType> {
-        val binding: ViewDataBinding = DataBindingUtil.inflate(
-            LayoutInflater.from(parent.context),
-            layoutResId,
-            parent,
-            false
-        )
+        val inflater = LayoutInflater.from(parent.context)
+        val binding: ViewDataBinding = DataBindingUtil.inflate(inflater, viewType, parent, false)
         return BindingViewHolder(binding)
     }
 
@@ -57,22 +38,17 @@ abstract class BaseBindingRecyclerAdapter<DataType>(
         onBindViewHolder(holder)
     }
 
-    abstract fun onBindViewHolder(holder: BindingViewHolder<DataType>)
+    override fun getItemViewType(position: Int): Int {
+        return getLayoutIdForPosition(position)
+    }
+
+    protected abstract fun getLayoutIdForPosition(position: Int): Int
+
+    protected abstract fun onBindViewHolder(holder: BindingViewHolder<DataType>)
 
     private fun hardUpdateList(newList: List<DataType>) {
         itemsList.clear()
         itemsList.addAll(newList)
         notifyDataSetChanged()
-    }
-
-    private fun diffUpdateList(newList: List<DataType>) {
-        diffCallback!!.setComparedLists(
-            oldList = itemsList,
-            newList = newList
-        )
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-        itemsList.clear()
-        itemsList.addAll(newList)
-        diffResult.dispatchUpdatesTo(this)
     }
 }
