@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
-internal abstract class BindingRecyclerAdapter<DataType>(
+abstract class BaseBindingRecyclerAdapter<DataType>(
     private val controller: Fragment,
     private val layoutResId: Int,
     areItemsTheSameFun: ((oldItem: DataType, newItem: DataType) -> Boolean)? = null
@@ -22,6 +22,14 @@ internal abstract class BindingRecyclerAdapter<DataType>(
             diffCallback = MyDiffCallback(areItemsTheSameFun)
         } else {
             diffCallback = null
+        }
+    }
+
+    fun updateItemsList(newList: List<DataType>) {
+        if (diffCallback == null) {
+            hardUpdateList(newList)
+        } else {
+            diffUpdateList(newList)
         }
     }
 
@@ -50,14 +58,6 @@ internal abstract class BindingRecyclerAdapter<DataType>(
     }
 
     abstract fun onBindViewHolder(holder: BindingViewHolder<DataType>)
-
-    protected fun updateItemsList(newList: List<DataType>) {
-        if (diffCallback == null) {
-            hardUpdateList(newList)
-        } else {
-            diffUpdateList(newList)
-        }
-    }
 
     private fun hardUpdateList(newList: List<DataType>) {
         itemsList.clear()
