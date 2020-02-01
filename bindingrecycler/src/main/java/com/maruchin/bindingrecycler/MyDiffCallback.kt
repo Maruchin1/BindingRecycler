@@ -2,14 +2,14 @@ package com.maruchin.bindingrecycler
 
 import androidx.recyclerview.widget.DiffUtil
 
-internal class DiffCallback<T>(
+internal class MyDiffCallback<T>(
     private val areItemsTheSameFun: (oldItem: T, newItem: T) -> Boolean
 ) : DiffUtil.Callback() {
 
     private var oldList: List<T> = emptyList()
     private var newList: List<T> = emptyList()
 
-    fun setCamparedLists(oldList: List<T>, newList: List<T>) {
+    fun setComparedLists(oldList: List<T>, newList: List<T>) {
         this.oldList = oldList
         this.newList = newList
     }
