@@ -5,17 +5,24 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DiffUtil
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 
-abstract class BaseBindingRecyclerAdapter<DataType>(
+abstract class BindingRecyclerAdapter<DataType> private constructor(
     private val controller: Fragment
 ) : RecyclerView.Adapter<BindingViewHolder<DataType>>() {
 
-    protected val itemsList = mutableListOf<DataType>()
+    private val itemsList = mutableListOf<DataType>()
 
-    open fun updateItemsList(newList: List<DataType>) {
-        hardUpdateList(newList)
+    constructor(controller: Fragment, items: List<DataType>) : this(controller) {
+        updateList(items)
+    }
+
+    constructor(controller: Fragment, itemsSource: LiveData<List<DataType>>) : this(controller) {
+        itemsSource.observe(controller.viewLifecycleOwner, Observer { items ->
+            updateList(items)
+        })
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindingViewHolder<DataType> {
@@ -24,29 +31,25 @@ abstract class BaseBindingRecyclerAdapter<DataType>(
         return BindingViewHolder(binding)
     }
 
+    override fun getItemViewType(position: Int): Int {
+        return getLayoutIdForPosition(position)
+    }
+
     override fun getItemCount(): Int {
         return itemsList.size
     }
 
     override fun onBindViewHolder(holder: BindingViewHolder<DataType>, position: Int) {
         val item = itemsList[position]
-        holder.bind(
-            position = position,
-            item = item,
-            controller = controller
-        )
+        holder.bind(position, item, controller)
         onBindViewHolder(holder)
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return getLayoutIdForPosition(position)
     }
 
     protected abstract fun getLayoutIdForPosition(position: Int): Int
 
     protected abstract fun onBindViewHolder(holder: BindingViewHolder<DataType>)
 
-    private fun hardUpdateList(newList: List<DataType>) {
+    private fun updateList(newList: List<DataType>) {
         itemsList.clear()
         itemsList.addAll(newList)
         notifyDataSetChanged()
